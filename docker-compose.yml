@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  joplin:
+    image: joplin/server:latest
+    ports:
+      - "127.0.0.1:22300:22300"
+    restart: unless-stopped
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+      - traefik.http.routers.joplin.rule=Host(`joplin.boxingoctopus.io`)
+      - traefik.http.routers.joplin.tls=true
+      - traefik.http.routers.joplin.entrypoints=websecure
+      - traefik.http.routers.joplin.service=joplin
+      - traefik.http.routers.joplin.tls.certresolver=leresolver
+      - traefik.http.services.joplin.loadbalancer.server.port=22300
+      - traefik.http.middlewares.joplin.headers.SSLRedirect=true
+      - traefik.http.middlewares.joplin.headers.STSSeconds=315360000
+      - traefik.http.middlewares.joplin.headers.browserXSSFilter=true
+      - traefik.http.middlewares.joplin.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.joplin.headers.forceSTSHeader=true
+      - traefik.http.middlewares.joplin.headers.SSLHost=boxingoctopus.io
+      - traefik.http.middlewares.joplin.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.joplin.headers.STSPreload=true
+    environment:
+      - APP_BASE_URL=${APP_BASE_URL}
+      - APP_PORT=${APP_PORT}
+      - DB_CLIENT=${DB_CLIENT}
+      - POSTGRES_CONNECTION_STRING=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/joplin?sslmode=no-verify
+      - MAILER_ENABLED=1
+      - MAILER_HOST=${SMTP_HOST}
+      - MAILER_PORT=${SMTP_PORT}
+      - MAILER_SECURE=true
+      - MAILER_AUTH_USER=${SMTP_USER}
+      - MAILER_AUTH_PASSWORD=${SMTP_PASS}
+      - MAILER_NOREPLY_NAME=JoplinServer
+      - MAILER_NOREPLY_EMAIL=joplin_notifications@mg.boxingoctopus.io
+
+networks:
+  default:
+    external: true
+    name: portainer_default
